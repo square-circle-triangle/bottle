@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 
-describe Campaigner::Server do
+describe Bottle::Server do
   
   describe "new" do
     it "should default the queue name to ...."

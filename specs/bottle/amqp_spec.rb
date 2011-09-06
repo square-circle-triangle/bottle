@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 
-describe Campaigner::AMQP do
+describe Bottle::AMQP do
   
   include EventedSpec::SpecHelper
 
@@ -9,10 +9,10 @@ describe Campaigner::AMQP do
   
 
   class AmqpTest
-    include Campaigner::AMQP
+    include Bottle::AMQP
     attr_accessor :broker
     
-    def initialize(amqp_broker = Campaigner::AMQP_HOST_ADDR)
+    def initialize(amqp_broker = Bottle::AMQP_HOST_ADDR)
       @broker = amqp_broker
     end
   end

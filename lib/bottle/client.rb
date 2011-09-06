@@ -1,16 +1,16 @@
-module Campaigner
+module Bottle
   class Client
-    include Campaigner::AMQP
+    include Bottle::AMQP
     
-    def initialize(client_reference, queue_name="blocks.campaigner", amqp_broker = Campaigner::AMQP_HOST_ADDR)
+    def initialize(client_reference, queue_name="blocks.bottle", amqp_broker = Bottle::AMQP_HOST_ADDR)
       @broker = amqp_broker
       @queue_name = queue_name
-      @reply_queue_name = "blocks.campaigner.#{client_reference}.reply.#{self.object_id}"
+      @reply_queue_name = "blocks.bottle.#{client_reference}.reply.#{self.object_id}"
     end
 
     def dispatch(msg_type, payload = {})
       with_amqp do
-        publisher = Campaigner::Publisher.new(@channel, @channel.default_exchange, @reply_queue_name) #direct('blocks.campaigns')        
+        publisher = Bottle::Publisher.new(@channel, @channel.default_exchange, @reply_queue_name) #direct('blocks.campaigns')        
         
         args = [payload.to_yaml, :routing_key => @queue_name, :type => msg_type]
 

@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
   class Publisher
 
     def initialize(channel, exchange, reply_queue_name)

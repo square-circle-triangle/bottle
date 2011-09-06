@@ -1,10 +1,10 @@
-module Campaigner
+module Bottle
   class Server
-    include Campaigner::AMQP
+    include Bottle::AMQP
     
     attr_accessor :queue_name
   
-    def initialize(queue_name="blocks.campaigner", amqp_broker = Campaigner::AMQP_HOST_ADDR)
+    def initialize(queue_name="blocks.bottle", amqp_broker = Bottle::AMQP_HOST_ADDR)
       @broker = amqp_broker
       @queue_name = queue_name
       #setup_logging
@@ -12,7 +12,7 @@ module Campaigner
   
     def poll
       with_amqp do
-        Campaigner::Listener.new(@channel, @queue_name).start
+        Bottle::Listener.new(@channel, @queue_name).start
       end
     end
     

@@ -1,13 +1,13 @@
 ## Server:
-require 'campaigner'
-s = Campaigner::Server.new
+require 'bottle'
+s = Bottle::Server.new
 s.poll
 
 
 ## Client:
-require 'campaigner'
+require 'bottle'
 
-c = Campaigner::Client.new("sct-home")
+c = Bottle::Client.new("sct-home")
 
 c.dispatch("info", {}) do |data|
   puts "MY DATA LIKE TO SAY: #{data.inspect}"

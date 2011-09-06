@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
   module AMQP
     attr_accessor :connection, :channel
     

@@ -1,16 +1,16 @@
-require "campaigner/version"
-require "campaigner/amqp"
-require "campaigner/client"
-require "campaigner/foreman"
-require "campaigner/listener"
-require "campaigner/publisher"
-require "campaigner/server"
+require "bottle/version"
+require "bottle/amqp"
+require "bottle/client"
+require "bottle/foreman"
+require "bottle/listener"
+require "bottle/publisher"
+require "bottle/server"
 
 require 'yaml'
 require 'logger'
 require 'amqp' # ?
 
-module Campaigner
+module Bottle
   AMQP_HOST_ADDR = '127.0.0.1'
 end
 

@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
   class Foreman
 
     class << self
@@ -15,7 +15,7 @@ module Campaigner
      end
 
     def self.inherited(sub)
-      label = sub.to_s.sub('Campaigner::','').downcase
+      label = sub.to_s.sub('Bottle::','').downcase
       registered_workers[label] = sub.new
     end
     

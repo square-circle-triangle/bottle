@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 
-describe Campaigner::Client do
+describe Bottle::Client do
   
   describe "new" do
     it "should return a new client obj"

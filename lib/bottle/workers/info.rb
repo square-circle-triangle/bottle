@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
 
   class Info < Foreman
 

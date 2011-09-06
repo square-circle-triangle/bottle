@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
 
   class Handler
     attr_accessor :payload, :metadata
@@ -8,8 +8,8 @@ module Campaigner
     
     def handle_message(metadata,payload)
       puts "Passing on a msg.. type = #{metadata.type}"
-      #worker_class = Campaigner.const_get(:"#{metadata.type}Worker")
-      worker_class = Campaigner::Foreman.registered_workers[metadata.type]
+      #worker_class = Bottle.const_get(:"#{metadata.type}Worker")
+      worker_class = Bottle::Foreman.registered_workers[metadata.type]
       cw = worker_class.new(YAML.load(payload))
       puts "Found a worker"
       respond cw.process, metadata

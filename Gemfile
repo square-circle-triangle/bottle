@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-# Specify your gem's dependencies in campaigner.gemspec
+# Specify your gem's dependencies in bottle.gemspec
 group :test do
   gem "rspec", "~> 2.6.0"
   gem "rake",  "~> 0.9.2"

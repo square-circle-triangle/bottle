@@ -6,8 +6,8 @@ describe Campaign::Listener do
     
     it "should create a new listener" do
 			args = {}
-			Campaigner::Listener.should_receive(:new).with(args)	
-			Campaigner::Listener.start(args)
+			Bottle::Listener.should_receive(:new).with(args)	
+			Bottle::Listener.start(args)
 		end
 		
 	end

@@ -1,4 +1,4 @@
-module Campaigner
+module Bottle
 
   class Listener
 
@@ -17,7 +17,7 @@ module Campaigner
 
     def handle_message(metadata,payload)
       log.debug "Passing on a msg.. type = #{metadata.type}"
-      worker_class = Campaigner::Foreman.registered_workers[metadata.type]
+      worker_class = Bottle::Foreman.registered_workers[metadata.type]
       respond worker_class.process(YAML.load(payload)), metadata
     rescue => e
       log.debug "Error processing message!"

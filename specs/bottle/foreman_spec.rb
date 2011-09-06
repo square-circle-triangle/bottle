@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 
-describe Campaigner::Foreman do
+describe Bottle::Foreman do
 
   it "should keep a hash of registered workers"
 
