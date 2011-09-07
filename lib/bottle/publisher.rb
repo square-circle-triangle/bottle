@@ -5,13 +5,12 @@ module Bottle
       @channel  = channel
       @exchange = exchange
       @reply_queue_name = reply_queue_name
-      
     end
 
     def publish(message, options = {}, &block)
       monitor_reply_queue(&block) if block_given?
       default_opts = { :message_id => Kernel.rand(10101010).to_s, :immediate => true }
-      default_opts[:reply_to] = @reply_queue_name #if block_given? ### This is always required!?
+      default_opts[:reply_to] = @reply_queue_name #if block_given? ### This is always required!? ---> IT must be because ack => true!
       oops = options.merge(default_opts)
       log.debug "OPTION:> " + oops.inspect
       @exchange.publish(message, oops)
