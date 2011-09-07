@@ -20,6 +20,16 @@ module Bottle
       registered_workers[label] = sub.new
     end
     
+    protected ################################
+    
+    def failure(msg)
+      {:state => 'error', :message => msg }
+    end
+    
+    def success(data)
+      { :state => 'success' }.merge(data)
+    end
+    
   end
   
 end
