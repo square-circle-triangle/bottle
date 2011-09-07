@@ -29,10 +29,6 @@ describe Bottle::Client do
     em_before { AMQP.cleanup_state }
     em_after  { AMQP.cleanup_state }
     
-    before :each do
-      @done_timeout = 0.25
-    end
-    
     it "should convert the given payload into YAML" do
       pending
       #@client.dispatch

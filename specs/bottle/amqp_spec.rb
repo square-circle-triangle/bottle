@@ -8,7 +8,6 @@ describe Bottle::AMQP do
   
   before :each do
     @amqptest = AmqpTest.new
-    @done_timeout = 0.25
   end
 
   describe "connect" do
@@ -16,7 +15,7 @@ describe Bottle::AMQP do
       em do
         @amqptest.connect
         @amqptest.connection.should be_an_instance_of(::AMQP::Session)
-        done(@done_timeout)
+        default_done
       end
     end
 
@@ -24,7 +23,7 @@ describe Bottle::AMQP do
       em do
         @amqptest.connect
         @amqptest.channel.should be_an_instance_of(::AMQP::Channel)
-        done(@done_timeout)
+        default_done
       end
     end
 
@@ -34,7 +33,7 @@ describe Bottle::AMQP do
     it "should return false if no connection has been created" do
       em do
         @amqptest.connected?.should be_false
-        done(@done_timeout)
+        default_done
       end
     end
     
@@ -43,7 +42,7 @@ describe Bottle::AMQP do
         @amqptest.connected?.should be_false
         @amqptest.connect
         @amqptest.connected?.should be_true
-        done(@done_timeout)
+        default_done
       end
     end
   end
@@ -55,7 +54,7 @@ describe Bottle::AMQP do
         @amqptest.with_amqp do
           @amqptest.connection.should be_an_instance_of(AMQP::Session)
         end
-        done(@done_timeout)
+        default_done
       end
     end
 
@@ -65,7 +64,7 @@ describe Bottle::AMQP do
         em do
           Signal.should_receive(:trap).with('INT')
           @amqptest.with_amqp {}
-          done(@done_timeout)
+          default_done
         end
       end
     end
@@ -76,7 +75,7 @@ describe Bottle::AMQP do
           Signal.should_not_receive(:trap)
           @amqptest.should_receive(:close_connection)
           @amqptest.with_amqp(:persistent => false) {}
-          done(@done_timeout)
+          default_done
         end
       end
     end
