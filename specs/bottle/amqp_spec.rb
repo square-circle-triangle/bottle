@@ -1,22 +1,11 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 
 describe Bottle::AMQP do
-  
   include EventedSpec::SpecHelper
 
   em_before { AMQP.cleanup_state }
   em_after  { AMQP.cleanup_state }
   
-  class AmqpTest
-    include Bottle::AMQP
-    attr_accessor :broker
-    
-    def initialize(amqp_broker = Bottle::AMQP_HOST_ADDR)
-      @broker = amqp_broker
-    end
-  end
-
-
   before :each do
     @amqptest = AmqpTest.new
     @done_timeout = 0.25

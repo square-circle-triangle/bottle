@@ -2,10 +2,12 @@ module Bottle
   class Client
     include Bottle::AMQP
     
-    def initialize(client_reference, queue_name="blocks.bottle", amqp_broker = Bottle::AMQP_HOST_ADDR)
+    attr_accessor :queue_name, :client_reference, :reply_queue_name
+    
+    def initialize(client_reference, queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_broker = Bottle::AMQP_HOST_ADDR)
       @broker = amqp_broker
       @queue_name = queue_name
-      @reply_queue_name = "blocks.bottle.#{client_reference}.reply.#{self.object_id}"
+      @reply_queue_name = DEFAULT_REPLY_QUEUE_FORMAT % [client_reference, object_id]
     end
 
     def dispatch(msg_type, payload = {})

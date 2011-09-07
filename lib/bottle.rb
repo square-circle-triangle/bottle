@@ -12,6 +12,8 @@ require 'amqp' # ?
 
 module Bottle
   AMQP_HOST_ADDR = '127.0.0.1'
+  DEFAULT_QUEUE_NAME = "blocks.bottle"
+  DEFAULT_REPLY_QUEUE_FORMAT = "bottle.%s.reply.%s"
 end
 
 
