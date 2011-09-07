@@ -17,7 +17,6 @@ module Bottle
     end 
 
     def handle_message(metadata,payload)
-      log.debug "Passing on a msg.. #{metadata.type.inspect}"
       worker_class = Bottle::Foreman.registered_workers[metadata.type]
       if worker_class.nil?
         respond({:state => 'error', :message => "Failed to find suitable worker for #{metadata.type}" }, metadata)
