@@ -22,7 +22,7 @@ module Bottle
     
     protected ################################
     
-    def failure(msg)
+    def failure(msg="Unknown Error")
       {:state => 'error', :message => msg }
     end
     
