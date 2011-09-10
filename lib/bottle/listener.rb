@@ -30,7 +30,7 @@ module Bottle
       respond({:state => 'error', :message => e.message }, metadata)
       false
     ensure
-      metadata.ack
+      #metadata.ack
     end
     
     def respond(payload, metadata)

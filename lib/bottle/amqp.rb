@@ -24,13 +24,13 @@ module Bottle
         end
       end
     end
-
-    private ########################
-
+    
     def close_connection
       @connection.close { EventMachine.stop } 
     end
-    
+
+    private ########################
+
     def trap_signal
       log.info "Signal trap caught.  Stopping now..."
       close_connection

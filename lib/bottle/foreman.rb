@@ -16,7 +16,7 @@ module Bottle
 
     def self.inherited(sub)
       label = sub.to_s.split('::').last.downcase
-      log.debug "Registering new worker: #{label}"
+      puts "Registering new worker: #{label}"
       registered_workers[label] = sub.new
     end
     
