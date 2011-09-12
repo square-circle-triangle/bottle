@@ -6,10 +6,11 @@ module Bottle
     def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, consumer = nil)#Dispatcher.new)
       @queue_name = queue_name
       @channel    = channel
-      #@channel.on_error(&method(:handle_channel_exception))
+      @channel.on_error(&method(:handle_channel_exception))
       #@consumer   = consumer
       @queue = @channel.queue(@queue_name)
-      @exchange = @channel.default_exchange
+      @exchange = @channel.direct("bottle")
+      @q_count = 0
     end
 
     def start
@@ -30,13 +31,14 @@ module Bottle
       respond({:state => 'error', :message => e.message }, metadata)
       false
     ensure
-      #metadata.ack
+      metadata.ack
     end
     
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
-      puts "responding with #{payload.inspect} to #{metadata.reply_to}"
-      @exchange.publish(payload.to_yaml,
+      @q_count += 1
+      puts "responding: #{@q_count}"#{}" with #{payload.inspect} to #{metadata.reply_to}"
+      @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,
                        :immediate      => true,
@@ -44,9 +46,9 @@ module Bottle
     end
 
 
-    # def handle_channel_exception(channel, channel_close)
-    #       puts "Oops... a channel-level exception: code = #{channel_close.reply_code}, message = #{channel_close.reply_text}"
-    #     end
+    def handle_channel_exception(channel, channel_close)
+      puts "Oops... a channel-level exception: code = #{channel_close.reply_code}, message = #{channel_close.reply_text}"
+    end
 
   end
   

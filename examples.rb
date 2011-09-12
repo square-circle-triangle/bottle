@@ -16,17 +16,38 @@ end
 c.send_message("campaign", {:message => "this goes to you"})
 
 
-
 ### With a sustained connection....
 
 require './lib/bottle'
 c = Bottle::Client.new("sct-home")
 start = Time.now
 c.with_connection do
-  10.times do
-    c.send_message("info")#{ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
+  1000.times do |i|
+    c.send_message("info"){ |data| } #{ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
   end
 end
+
+
+require './lib/bottle'
+c = Bottle::Client.new("sct-home")
+start = Time.now
+c.with_threaded_connection do
+  items = (0..1000).to_a 
+  handle_item = proc{ 
+    puts "off we go.."
+    if i = items.shift 
+      c.send_message("info"){ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
+      EM.next_tick(handle_item) 
+    end 
+  }
+  handle_item.call()
+end
+
+
+
+
+
+
 endt = Time.now
 res1 = endt.to_i - start.to_i
 
@@ -34,5 +55,5 @@ require './lib/bottle'
 c = Bottle::Client.new("sct-home")
 
 1000.times do
-  c.send_message("info", {}) { |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
+  c.send_message("info")#, {}) { |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
 end
