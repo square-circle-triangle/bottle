@@ -18,13 +18,6 @@ c.send_message("campaign", {:message => "this goes to you"})
 
 ### With a sustained connection....
 
-require './lib/bottle'
-c = Bottle::Client.new("sct-home")
-EM.defer do
-10.times do |i|
-  c.send_message("info"){ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
-end
-end
 
 
 require './lib/bottle'

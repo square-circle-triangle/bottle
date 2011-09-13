@@ -25,17 +25,15 @@ module Bottle
       true
     end
 
-    def with_connection
-      with_amqp do
-        Thread.new do
-          @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
-          yield self
-          @publisher.close_connections = true
-        end
-      end
-    end
+    # def with_connection
+    #   with_amqp do
+    #     @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
+    #     yield self
+    #     @publisher.close_connections = true
+    #   end
+    # end
     
-    def with_threaded_connection(iter)
+    def each_with_amqp(iter)
       threaded_connect(iter) do |i|
         @publisher ||= Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
         yield(i)
