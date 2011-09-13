@@ -1,19 +1,15 @@
 module Bottle
   module AMQP
     attr_accessor :connection, :channel, :reactor_thread
-    
-    def connect(threaded=false)
-      #if threaded
-      #  threaded_connect(:host => @broker)
-      #else
-      puts "CONNECTING>>>."
-        @connection = ::AMQP.connect(:host => @broker)
-        log.info "Connected to AMQP broker at #{@broker}"
-        @channel = ::AMQP::Channel.new(@connection)
-      #end
+
+    def connect
+      @connection = ::AMQP.connect(:host => @broker)
+      log.info "Connected to AMQP broker at #{@broker}"
+      @channel = ::AMQP::Channel.new(@connection)
     end
-    
+
     def connected?
+      log.debug "connected? " + @connection.inspect
       @connection && @connection.is_a?(::AMQP::Session)
     end
 
@@ -29,38 +25,37 @@ module Bottle
         end
       end
     end
-    
-    def threaded_connect
+
+    def threaded_connect(_iterator, &block)
       Thread.abort_on_exception = true
       args = {:host => @broker, :on_tcp_connection_failure => method(:on_tcp_connection_failure) }
       @reactor_thread = Thread.new { 
         puts "Connecting to AMQP broker at #{@broker}"
-        # EventMachine.run do
-        #   puts "in the reactor..."
-        #   connect
-        #   puts "Connected to AMQP broker at #{@broker}"
-        #   puts "REACTOR IS RUNNING? "  + EventMachine.reactor_running?.inspect
-        # end     
         ::EM.run { ::AMQP.start } 
       }
-      sleep(0.5)
-      
-      #t2 = Thread.new { 
-      puts EventMachine.reactor_running?.inspect
+      sleep(0.5) 
+
+      handle_item = Proc.new do
+        if _iter = _iterator.shift 
+          block.call(_iter)
+          EM.next_tick(handle_item) 
+        else
+          puts "DONE.. we can kill the reactor thread now.."
+          close_connection
+          @reactor_thread.kill
+        end
+      end
+
       EventMachine.next_tick do
-         puts "next tick..."
-         ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
-         @channel = ::AMQP.channel
-         puts "YIELDING>>>>>"
-         yield
+        ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
+        @channel = ::AMQP.channel
+        handle_item.call()
       end
       @reactor_thread.join
-     #}
-       #AMQP.channel.queue("amqpgem.examples.rails23.warmup", :durable => true)
     end
-    
+
     def close_connection
-      return unless @connection.connected?
+      return unless connected?
       log.info "Closing connection..."
       @connection.close { EventMachine.stop if EM.reactor_running? } 
     end
@@ -71,7 +66,7 @@ module Bottle
       log.info "Signal trap caught.  Stopping now..."
       close_connection
     end
-    
+
     def on_tcp_connection_failure()
       puts "TCP CONNECTION FAILED!!!!!!!"
     end

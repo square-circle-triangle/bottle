@@ -23,7 +23,9 @@ module Bottle
         respond({:state => 'error', :message => "Failed to find suitable worker for #{metadata.type}" }, metadata)
         false
       else
-        respond worker_class.process(YAML.load(payload)), metadata
+        payload = YAML.load(payload)
+        log.debug "GOT PAYLOAD: #{payload.inspect}"
+        respond worker_class.process(payload), metadata
         true
       end
     rescue => e
@@ -37,7 +39,7 @@ module Bottle
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
       @q_count += 1
-      puts "responding: #{@q_count}"#{}" with #{payload.inspect} to #{metadata.reply_to}"
+      log.debug "#{@q_count}: responding with #{payload.inspect}"
       @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,

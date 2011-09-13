@@ -1,14 +1,8 @@
 require './lib/bottle'
 c = Bottle::Client.new("sct-home")
-c.with_threaded_connection do
-  puts "OK...."
-  items = (0..1000).to_a 
-  handle_item = Proc.new do
-    puts "off we go.."
-    if i = items.shift 
-      c.send_message("info"){ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
-      EM.next_tick(handle_item) 
-    end 
-  end
-  handle_item.call()
+
+recipients = (1..100000).to_a
+
+c.with_threaded_connection(recipients) do |recipient|
+    c.send_message("info", {:recipient => recipient}){ |data| puts "MY DATA LIKE TO SAY: #{data.inspect}" }
 end

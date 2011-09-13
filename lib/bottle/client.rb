@@ -12,8 +12,9 @@ module Bottle
       @count = 0
     end
 
-    def send_message(msg_type, payload = {}, &block)
+    def send_message(msg_type, payload, &block)
       if EM.reactor_running? && !@publisher.nil?
+        #puts "HERE::" + payload.inspect
         block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
       else
         with_amqp do
@@ -34,10 +35,10 @@ module Bottle
       end
     end
     
-    def with_threaded_connection
-      threaded_connect do
-        @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
-        yield self
+    def with_threaded_connection(iter)
+      threaded_connect(iter) do |i|
+        @publisher ||= Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
+        yield(i)
         @publisher.close_connections = true
       end
     end
@@ -48,12 +49,9 @@ module Bottle
 
     def dispatch(msg_type, payload = {}, opts={})
       args = [payload.to_yaml, {:routing_key => @queue_name, :type => msg_type}, self]
-
       if block_given?
         @count+=1
-        puts "publishing msg: #{@count}"
         @publisher.publish(*args) do |data|
-          #log.debug "Passing on the response..."
           yield(data)
         end 
       else

@@ -8,7 +8,6 @@ module Bottle
       @reply_queue_name = reply_queue_name
       @queue_count = 0
       @close_connections = close_connections
-
       # @ack_count = 0
       # @nack_count = 0
       # @channel.confirm_select
@@ -20,11 +19,11 @@ module Bottle
       default_opts = { :message_id => Kernel.rand(10101010).to_s, :immediate => true }
       
       reply_queue = @reply_queue_name
+      
       monitor_reply_queue(reply_queue,&block) if block_given?
       
-      default_opts[:reply_to] = reply_queue #if block_given? ### This is always required!? ---> IT must be because ack => true!
+      default_opts[:reply_to] = reply_queue
       oops = options.merge(default_opts)
-      #log.debug "Passing Options -> " + oops.inspect
       @exchange.publish(message, oops)
     end
 
@@ -34,7 +33,7 @@ module Bottle
     def monitor_reply_queue(reply_queue_name)
       @queue_count += 1
       return if !!@reply_queue
-
+      puts "setting up the reply queue: #{reply_queue_name}"
       @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
       log.debug "Reply expected.. monitoring..."
       
@@ -42,7 +41,6 @@ module Bottle
         data = YAML.load(payload)
         @queue_count -= 1
         yield(data)  
-        puts "QUEUE:#{@queue_count} : #{@close_connections.inspect}"
         @client.close_connection if @queue_count == 0 && @close_connections
       end
     end
