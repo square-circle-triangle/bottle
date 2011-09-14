@@ -4,8 +4,8 @@ module Bottle
     
     attr_accessor :queue_name, :reply_queue_name, :broker
       
-    def initialize(queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_broker = Bottle::AMQP_HOST_ADDR)#, log_target=$stdout)
-      @broker = amqp_broker
+    def initialize(queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_settings = {})#, log_target=$stdout)
+      @amqp_settings = Bottle::AMQP_DEFAULTS.merge(amqp_settings)
       @queue_name = queue_name
       #setup_logging(log_target)
     end

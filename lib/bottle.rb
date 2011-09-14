@@ -15,7 +15,9 @@ require 'amqp/extensions/rabbitmq'
 
 
 module Bottle
-  AMQP_HOST_ADDR = '127.0.0.1'
+  AMQP_DEFAULTS = {
+    :host => '127.0.0.1'
+  }
   DEFAULT_QUEUE_NAME = "bottle.default"
   DEFAULT_REPLY_QUEUE_FORMAT = "bottle.%s.reply.%s"
 end

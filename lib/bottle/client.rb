@@ -4,8 +4,8 @@ module Bottle
 
     attr_accessor :queue_name, :client_reference, :reply_queue_name
 
-    def initialize(client_reference, queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_broker = Bottle::AMQP_HOST_ADDR)
-      @broker = amqp_broker
+    def initialize(client_reference, queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_settings = {})
+      @amqp_settings = Bottle::AMQP_DEFAULTS.merge(amqp_settings)
       @queue_name = queue_name
       @reply_queue_name = DEFAULT_REPLY_QUEUE_FORMAT % [client_reference, object_id]
       #@close_connections = true

@@ -14,7 +14,7 @@ module Bottle
       # handle_confirms
     end
 
-    def publish(message, options = {}, client, &block)
+    def publish(message, options, client, &block)
       @client = client
       default_opts = { :message_id => Kernel.rand(10101010).to_s, :immediate => true }
       

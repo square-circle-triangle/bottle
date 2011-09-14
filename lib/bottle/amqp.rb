@@ -3,8 +3,8 @@ module Bottle
     attr_accessor :connection, :channel, :reactor_thread
 
     def connect
-      @connection = ::AMQP.connect(:host => @broker)
-      log.info "Connected to AMQP broker at #{@broker}"
+      @connection = ::AMQP.connect(@amqp_settings)
+      log.info "Connected to AMQP broker at #{@amqp_settings[:broker]}"
       @channel = ::AMQP::Channel.new(@connection)
     end
 
@@ -28,10 +28,10 @@ module Bottle
 
     def threaded_connect(_iterator, &block)
       Thread.abort_on_exception = true
-      args = {:host => @broker, :on_tcp_connection_failure => method(:on_tcp_connection_failure) }
+      args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:on_tcp_connection_failure) })
       @reactor_thread = Thread.new { 
-        puts "Connecting to AMQP broker at #{@broker}"
-        ::EM.run { ::AMQP.start } 
+        puts "Connecting to AMQP broker at #{@amqp_settings[;broker]}"
+        ::EM.run { ::AMQP.start(args) } 
       }
       sleep(0.5) 
 
