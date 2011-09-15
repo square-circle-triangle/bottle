@@ -1,17 +1,10 @@
-require "bottle/version"
-require "bottle/amqp"
-require "bottle/client"
-require "bottle/foreman"
-require "bottle/listener"
-require "bottle/publisher"
-require "bottle/server"
+%w(version amqp client foreman listener publisher server).each { |f| require File.join(File.dirname(__FILE__), 'bottle', f) }
 
-require "bottle/workers/info"
+require File.join(File.dirname(__FILE__), 'bottle', 'workers', 'info') 
 
 require 'yaml'
 require 'logger'
 require 'amqp'
-require 'amqp/extensions/rabbitmq'
 
 
 module Bottle
