@@ -8,16 +8,15 @@ module Bottle
       @amqp_settings = Bottle::AMQP_DEFAULTS.merge(amqp_settings)
       @queue_name = queue_name
       @reply_queue_name = DEFAULT_REPLY_QUEUE_FORMAT % [client_reference, object_id]
-      #@close_connections = true
-      @count = 0
     end
 
     def send_message(msg_type, payload, &block)
       if EM.reactor_running? && !@publisher.nil?
-        #puts "HERE::" + payload.inspect
+        puts "IN REACTOR, and publishing..."
         block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
       else
         with_amqp do
+          puts "started reactor...publishing..."
           @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, true) #direct('blocks.campaigns')        
           block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
         end
@@ -37,7 +36,6 @@ module Bottle
       threaded_connect(iter) do |i|
         @publisher ||= Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
         yield(i)
-        @publisher.close_connections = true
       end
     end
 
@@ -48,7 +46,6 @@ module Bottle
     def dispatch(msg_type, payload = {}, opts={})
       args = [payload.to_yaml, {:routing_key => @queue_name, :type => msg_type}, self]
       if block_given?
-        @count+=1
         @publisher.publish(*args) do |data|
           yield(data)
         end 

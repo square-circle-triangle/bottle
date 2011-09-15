@@ -1,12 +1,11 @@
 module Bottle
   class Publisher
-    attr_accessor :close_connections, :queue_count
+    attr_accessor :close_connections
 
     def initialize(channel, exchange, reply_queue_name, close_connections)
       @channel  = channel
       @exchange = exchange
       @reply_queue_name = reply_queue_name
-      @queue_count = 0
       @close_connections = close_connections
       # @ack_count = 0
       # @nack_count = 0
@@ -21,7 +20,6 @@ module Bottle
       reply_queue = @reply_queue_name
       
       monitor_reply_queue(reply_queue,&block) if block_given?
-      
       default_opts[:reply_to] = reply_queue
       oops = options.merge(default_opts)
       @exchange.publish(message, oops)
@@ -31,7 +29,6 @@ module Bottle
     ### IMPLEMENTATION
 
     def monitor_reply_queue(reply_queue_name)
-      @queue_count += 1
       return if !!@reply_queue
       puts "setting up the reply queue: #{reply_queue_name}"
       @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
@@ -39,9 +36,7 @@ module Bottle
       
       @reply_queue.subscribe do |metadata, payload|
         data = YAML.load(payload)
-        @queue_count -= 1
-        yield(data)  
-        @client.close_connection if @queue_count == 0 && @close_connections
+        yield(data)
       end
     end
     

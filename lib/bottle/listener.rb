@@ -14,6 +14,7 @@ module Bottle
     end
 
     def start
+      log.debug "binding to #{@queue_name}, on exchange #{@exchange.name}"
       @queue.bind(@exchange, :routing_key => @queue_name).subscribe(:ack => true, &method(:handle_message))
     end 
 
