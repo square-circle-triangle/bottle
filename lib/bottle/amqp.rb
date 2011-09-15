@@ -30,7 +30,7 @@ module Bottle
       Thread.abort_on_exception = true
       args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:on_tcp_connection_failure) })
       @reactor_thread = Thread.new { 
-        puts "Connecting to AMQP broker at #{@amqp_settings[;broker]}"
+        puts "Connecting to AMQP broker at #{@amqp_settings[:broker]}"
         ::EM.run { ::AMQP.start(args) } 
       }
       sleep(0.5) 
