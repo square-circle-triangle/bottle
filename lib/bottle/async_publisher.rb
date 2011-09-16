@@ -11,12 +11,13 @@ module Bottle
       # handle_confirms
     end
 
-    def publish(message, options, &block)
+    def publish(message, options, client, &block)
+      @client = client
       log.debug "Publishing over an Asynchronous publisher..."
       
       default_opts = { :message_id => Kernel.rand(10101010).to_s, :immediate => true }
       
-      reply_queue = @reply_queue_name
+      reply_queue = @reply_queue_name + default_opts[:message_id]
       
       monitor_reply_queue(reply_queue,&block) if block_given?
       default_opts[:reply_to] = reply_queue
@@ -28,13 +29,15 @@ module Bottle
     ### IMPLEMENTATION
 
     def monitor_reply_queue(reply_queue_name)
-      return if !!@reply_queue
-      log.debug "Reply expected..setting up the reply queue: #{reply_queue_name}"
-      @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
+      @client.reply_queue_count += 1
+      #return if !!@reply_queue
       
-      @reply_queue.subscribe do |metadata, payload|
+      log.debug "Reply expected..setting up the reply queue: #{reply_queue_name}"
+      reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
+      reply_queue.subscribe do |metadata, payload|
         data = YAML.load(payload)
         yield(data)
+        @client.reply_queue_count -= 1
       end
     end
     

@@ -38,7 +38,7 @@ module Bottle
     
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
-      log.debug "Responding with #{payload.inspect}"
+      log.debug "Responding with #{payload.inspect} to: #{metadata.reply_to}"
       @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,

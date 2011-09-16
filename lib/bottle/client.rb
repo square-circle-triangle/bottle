@@ -2,11 +2,12 @@ module Bottle
   class Client
     include Bottle::AMQP
 
-    attr_accessor :queue_name, :client_reference, :reply_queue_name
+    attr_accessor :queue_name, :client_reference, :reply_queue_name, :reply_queue_count
 
     def initialize(client_reference, queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_settings = {})
       @amqp_settings = Bottle::AMQP_DEFAULTS.merge(amqp_settings)
       @queue_name = queue_name
+      @reply_queue_count = 0
       @reply_queue_name = DEFAULT_REPLY_QUEUE_FORMAT % [client_reference, object_id]
     end
 
@@ -21,7 +22,7 @@ module Bottle
       end
       true
     end
-    
+
     def each_with_amqp(iter)
       @publisher = nil
       threaded_connect(iter) do |i|
@@ -36,8 +37,14 @@ module Bottle
 
     def dispatch(msg_type, payload = {}, opts={})
       opts = opts.merge(:type => msg_type)
-      opts.merge! (async? ? { :routing_key => @queue_name } : { :key => @queue_name } )
       args = [payload.to_yaml, opts]
+      if async?
+        opts[:routing_key] = @queue_name
+        args.push self
+      else
+        opts[:key] = @queue_name
+      end
+
       if block_given?
         @publisher.publish(*args) do |data|
           yield(data)
@@ -46,10 +53,10 @@ module Bottle
         @publisher.publish(*args)
       end
     end
-    
+
     def async?
       @publisher.is_a?(Bottle::AsyncPublisher)
     end
-    
+
   end
 end

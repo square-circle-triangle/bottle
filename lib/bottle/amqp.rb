@@ -35,18 +35,27 @@ module Bottle
       }
       sleep(0.5) 
 
+      await_completion = Proc.new do
+        if @reply_queue_count < 1
+          puts "DONE.. we can kill the reactor thread now..."
+          close_connection
+          @reactor_thread.kill
+        else
+          EM.next_tick(await_completion) 
+        end
+      end
+
       handle_item = Proc.new do
         if _iter = _iterator.shift 
           block.call(_iter)
           EM.next_tick(handle_item) 
         else
-          puts "DONE.. we can kill the reactor thread now.."
-          EM.next_tick do
-            close_connection
-            @reactor_thread.kill
-          end
+          puts "Finished processing the list.  Start checking that reply queues are finished"
+          EM.next_tick(await_completion)
         end
       end
+      
+      
 
       EventMachine.next_tick do
         ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
