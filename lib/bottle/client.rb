@@ -12,29 +12,20 @@ module Bottle
 
     def send_message(msg_type, payload, &block)
       if EM.reactor_running? && !@publisher.nil?
-        puts "IN REACTOR, and publishing..."
         block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
       else
-        with_amqp do
-          puts "started reactor...publishing..."
-          @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, true) #direct('blocks.campaigns')        
-          block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
-        end
+        @sync_channel = Bunny.new#(:logging => true)
+        @sync_channel.start
+        @publisher = Bottle::Publisher.new(@sync_channel, @sync_channel.exchange("bottle"), @reply_queue_name)       
+        block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
       end
       true
     end
-
-    # def with_connection
-    #   with_amqp do
-    #     @publisher = Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
-    #     yield self
-    #     @publisher.close_connections = true
-    #   end
-    # end
     
     def each_with_amqp(iter)
+      @publisher = nil
       threaded_connect(iter) do |i|
-        @publisher ||= Bottle::Publisher.new(@channel, @channel.direct("bottle"), @reply_queue_name, false)   
+        @publisher ||= Bottle::AsyncPublisher.new(@channel, @channel.direct("bottle"), @reply_queue_name)  
         yield(i)
       end
     end
@@ -44,16 +35,21 @@ module Bottle
 
 
     def dispatch(msg_type, payload = {}, opts={})
-      args = [payload.to_yaml, {:routing_key => @queue_name, :type => msg_type}, self]
+      opts = opts.merge(:type => msg_type)
+      opts.merge! (async? ? { :routing_key => @queue_name } : { :key => @queue_name } )
+      args = [payload.to_yaml, opts]
       if block_given?
         @publisher.publish(*args) do |data|
           yield(data)
         end 
       else
         @publisher.publish(*args)
-        # How to know when it is safe to close?  Need a callback to know the msg has gone?
-        # close_connection if @close_connections
       end
     end
+    
+    def async?
+      @publisher.is_a?(Bottle::AsyncPublisher)
+    end
+    
   end
 end

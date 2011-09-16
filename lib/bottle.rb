@@ -1,10 +1,11 @@
-%w(version amqp client foreman listener publisher server).each { |f| require File.join(File.dirname(__FILE__), 'bottle', f) }
+%w(version amqp client foreman listener publisher async_publisher server).each { |f| require File.join(File.dirname(__FILE__), 'bottle', f) }
 
 require File.join(File.dirname(__FILE__), 'bottle', 'workers', 'info') 
 
 require 'yaml'
 require 'logger'
 require 'amqp'
+require 'bunny'
 
 
 module Bottle
