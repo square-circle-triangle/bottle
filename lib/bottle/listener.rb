@@ -10,7 +10,6 @@ module Bottle
       #@consumer   = consumer
       @queue = @channel.queue(@queue_name)
       @exchange = @channel.direct("bottle")
-      @q_count = 0
     end
 
     def start
@@ -39,8 +38,7 @@ module Bottle
     
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
-      @q_count += 1
-      log.debug "#{@q_count}: responding with #{payload.inspect}"
+      log.debug "Responding with #{payload.inspect}"
       @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,
