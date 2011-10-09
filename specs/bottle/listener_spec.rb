@@ -63,6 +63,7 @@ describe Bottle::Listener do
 
     before do
       @payload =  { :some => 'content' }.to_yaml
+      @de = mock("Exchange")
     end	  
 
     context 'success' do
@@ -82,13 +83,13 @@ describe Bottle::Listener do
       it "should respond with the return value of the worker" do
         em do
           @amqptest.with_amqp do
-            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'dummyworker', :reply_to => "test.reply" })
+            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'dummyworker', :reply_to => "test.reply", :message_id => "1234" })
             meta.stub!(:ack)
             listener = described_class.new(@amqptest.channel, @queue_name)
-            listener.exchange.should_receive(:publish).with(DummyWorker.new.process({}).to_yaml,
+            @amqptest.channel.stub!(:default_exchange).and_return(@de)
+            @de.should_receive(:publish).with(DummyWorker.new.process({}).to_yaml,
                              :routing_key    => meta.reply_to,
                              :correlation_id => meta.message_id,
-                             :immediate      => true,
                              :mandatory      => true)
             listener.handle_message(meta,@payload)
             default_done
@@ -113,14 +114,14 @@ describe Bottle::Listener do
       it "should respond with an error message if a response is required and no matching worker could be found" do
         em do
           @amqptest.with_amqp do
-            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'nonexistentworker', :reply_to => 'test.reply' })
+            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'nonexistentworker', :reply_to => 'test.reply', :message_id => "2468" })
             meta.stub!(:ack)
             listener = described_class.new(@amqptest.channel, @queue_name)
             response = {:state => 'error', :message => "Failed to find suitable worker for #{meta.type}" }
-            listener.exchange.should_receive(:publish).with(response.to_yaml,
+            @amqptest.channel.stub!(:default_exchange).and_return(@de)
+            @de.should_receive(:publish).with(response.to_yaml,
                              :routing_key    => meta.reply_to,
                              :correlation_id => meta.message_id,
-                             :immediate      => true,
                              :mandatory      => true)
             listener.handle_message(meta,@payload).should === false
             default_done
@@ -131,15 +132,15 @@ describe Bottle::Listener do
       it "should respond with an error message if the worker caused an error" do
         em do
           @amqptest.with_amqp do
-            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'dummyworker', :reply_to => 'test.reply' })
+            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'dummyworker', :reply_to => 'test.reply', :message_id => "3912" })
             meta.stub!(:ack)
             Bottle::Foreman.registered_workers['dummyworker'].stub!(:process).and_raise "DummyWorker raised an error!"
             listener = described_class.new(@amqptest.channel, @queue_name)
             response = {:state => 'error', :message => "DummyWorker raised an error!" }
-            listener.exchange.should_receive(:publish).with(response.to_yaml,
+            @amqptest.channel.stub!(:default_exchange).and_return(@de)
+            @de.should_receive(:publish).with(response.to_yaml,
                              :routing_key    => meta.reply_to,
                              :correlation_id => meta.message_id,
-                             :immediate      => true,
                              :mandatory      => true)
             listener.handle_message(meta,@payload)
             default_done

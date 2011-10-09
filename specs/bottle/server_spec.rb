@@ -10,10 +10,11 @@ describe Bottle::Server do
     it "should default the queue name to DEFAULT_QUEUE_NAME" do
       @server.queue_name.should == Bottle::DEFAULT_QUEUE_NAME
     end
-
-    it "should default the amqp_broker address to AMQP_HOST_ADDR" do
-      @server.broker.should == Bottle::AMQP_HOST_ADDR
-    end
+  
+    # Not a useful test.
+    #it "should default the amqp_broker address to AMQP_DEFAULTS[:host]" do
+    #  @server.amqp_settings[:host].should == Bottle::AMQP_DEFAULTS[:host]
+    #end
 
   end
 

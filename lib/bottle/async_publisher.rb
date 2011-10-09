@@ -15,7 +15,7 @@ module Bottle
       @client = client
       log.debug "Publishing over an Asynchronous publisher..."
       
-      default_opts = { :message_id => Kernel.rand(10101010).to_s, :immediate => true }
+      default_opts = { :message_id => Kernel.rand(10101010).to_s, :mandatory => true }
       
       reply_queue = @reply_queue_name + default_opts[:message_id]
       
@@ -32,9 +32,9 @@ module Bottle
       @client.reply_queue_count += 1
       #return if !!@reply_queue
       
-      log.debug "Reply expected..setting up the reply queue: #{reply_queue_name}"
-      reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
-      reply_queue.subscribe do |metadata, payload|
+      log.debug "Reply expected... setting up the reply queue: #{reply_queue_name}"
+      @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
+      @reply_queue.subscribe do |metadata, payload|
         data = YAML.load(payload)
         yield(data)
         @client.reply_queue_count -= 1

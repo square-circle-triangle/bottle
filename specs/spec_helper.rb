@@ -11,8 +11,8 @@ class AmqpTest
   include Bottle::AMQP
   attr_accessor :broker
   
-  def initialize(amqp_broker = Bottle::AMQP_HOST_ADDR)
-    @broker = amqp_broker
+  def initialize(settings={})
+    @amqp_settings = Bottle::AMQP_DEFAULTS.merge(settings)
   end
 end
 

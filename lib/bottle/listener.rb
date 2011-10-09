@@ -24,7 +24,7 @@ module Bottle
         false
       else
         payload = YAML.load(payload)
-        log.debug "GOT PAYLOAD: #{payload.inspect}"
+        #log.debug "GOT PAYLOAD: #{payload.inspect}"
         respond worker_class.process(payload), metadata
         true
       end
@@ -38,11 +38,11 @@ module Bottle
     
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
-      log.debug "Responding with #{payload.inspect} to: #{metadata.reply_to}"
+      log.debug "Responding with #{payload.inspect} to: #{metadata.reply_to} : #{metadata.message_id}"
       @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,
-                       :immediate      => true,
+                       # :immediate      => true,
                        :mandatory      => true)
     end
 

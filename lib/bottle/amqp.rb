@@ -4,7 +4,7 @@ module Bottle
 
     def connect
       @connection = ::AMQP.connect(@amqp_settings)
-      log.info "Connected to AMQP broker at #{@amqp_settings[:host]} : #{@connection.inspect}"
+      log.info "Connected to AMQP broker at #{@amqp_settings[:host]}"
       @channel = ::AMQP::Channel.new(@connection)
     end
 
@@ -30,14 +30,14 @@ module Bottle
       Thread.abort_on_exception = true
       args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:on_tcp_connection_failure) })
       @reactor_thread = Thread.new { 
-        puts "Connecting to AMQP broker at #{@amqp_settings[:host]}"
+        log.debug "Connecting to AMQP broker at #{@amqp_settings[:host]}"
         ::EM.run { ::AMQP.start(args) } 
       }
       sleep(0.5) 
 
       await_completion = Proc.new do
         if @reply_queue_count < 1
-          puts "DONE.. we can kill the reactor thread now..."
+          log.debug "DONE.. we can kill the reactor thread now..."
           close_connection
           @reactor_thread.kill
         else
@@ -50,18 +50,17 @@ module Bottle
           block.call(_iter)
           EM.next_tick(handle_item) 
         else
-          puts "Finished processing the list.  Start checking that reply queues are finished"
+          log.debug "Finished processing the list.  Start checking that reply queues are finished"
           EM.next_tick(await_completion)
         end
       end
-      
-      
 
       EventMachine.next_tick do
         ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
         @channel = ::AMQP.channel
         handle_item.call()
       end
+      
       @reactor_thread.join
     end
 
@@ -79,7 +78,7 @@ module Bottle
     end
 
     def on_tcp_connection_failure()
-      puts "TCP CONNECTION FAILED!!!!!!!"
+      log.debug "TCP CONNECTION FAILED!!!!!!!"
     end
 
   end
