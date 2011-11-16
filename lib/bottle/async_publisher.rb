@@ -1,58 +1,45 @@
 module Bottle
-  class AsyncPublisher
+  class AsyncPublisher < Publisher
 
     def initialize(channel, exchange, reply_queue_name)
-      @channel  = channel
-      @exchange = exchange
-      @reply_queue_name = reply_queue_name
-      # @ack_count = 0
-      # @nack_count = 0
-      # @channel.confirm_select
-      # handle_confirms
+      super
+      @reply_blocks = {}
     end
 
-    def publish(message, options, client, &block)
-      @client = client
+    def publish(message, options, &block)
       log.debug "Publishing over an Asynchronous publisher..."
-      
-      default_opts = { :message_id => Kernel.rand(10101010).to_s, :mandatory => true }
-      
-      reply_queue = @reply_queue_name + default_opts[:message_id]
-      
-      monitor_reply_queue(reply_queue,&block) if block_given?
-      default_opts[:reply_to] = reply_queue
-      oops = options.merge(default_opts)
-      @exchange.publish(message, oops)
+      default_opts = default_options.merge({ :mandatory => true })
+      monitor_reply_queue(@reply_queue_name,default_opts[:message_id], &block) if block_given?
+      @exchange.publish(message, options.merge(default_opts))
     end
 
 
     ### IMPLEMENTATION
 
-    def monitor_reply_queue(reply_queue_name)
-      @client.reply_queue_count += 1
-      #return if !!@reply_queue
-      
+    def monitor_reply_queue(reply_queue_name, msg_id, &block)
+      @reply_blocks[msg_id] = block
+
+      log.debug "QUEUE COUNT: #{@reply_blocks.size}"
+      return if !!@reply_queue
+
       log.debug "Reply expected... setting up the reply queue: #{reply_queue_name}"
       @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
       @reply_queue.subscribe do |metadata, payload|
-        data = YAML.load(payload)
-        yield(data)
-        @client.reply_queue_count -= 1
+        if reply_block = get_reply_block(metadata.correlation_id)
+          reply_block.call(extract_payload(payload))
+        else
+          raise MissingReplyClosureError
+        end
       end
     end
-    
-    # def handle_confirms
-    #       @channel.on_ack do |basic_ack|
-    #         @ack_count += 1 
-    #       end
-    #       
-    #       @channel.on_nack do |basic_ack|
-    #         @nack_count += 1
-    #       end
-    #     end
-    
-    def handle_channel_exception(channel, channel_close)
-      log.warn "Oops... a channel-level exception: code = #{channel_close.reply_code}, message = #{channel_close.reply_text}"
-    end 
+
+    def get_reply_block(id)
+      @reply_blocks.delete(id)
+    end
+
+    def waiting_for_replies?
+      @reply_blocks.size > 0
+    end
+
   end
 end

@@ -2,7 +2,7 @@ module Bottle
   class Client
     include Bottle::AMQP
 
-    attr_accessor :queue_name, :client_reference, :reply_queue_name, :reply_queue_count
+    attr_accessor :queue_name, :client_reference, :reply_queue_name, :reply_queue_count, :publisher
 
     def initialize(client_reference, queue_name=Bottle::DEFAULT_QUEUE_NAME, amqp_settings = {})
       @amqp_settings = Bottle::AMQP_DEFAULTS.merge(amqp_settings)
@@ -12,12 +12,16 @@ module Bottle
     end
 
     def send_message(msg_type, payload, &block)
-      if EM.reactor_running? && !@publisher.nil?
-        block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
+      if EM.reactor_running?
+        if !@publisher.nil?
+          block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
+        else
+          return false
+        end
       else
-        @sync_channel = Bunny.new#(:logging => true)
-        @sync_channel.start
-        @publisher = Bottle::Publisher.new(@sync_channel, @sync_channel.exchange("bottle"), @reply_queue_name)       
+        sync_channel = Bunny.new#(:logging => true)
+        sync_channel.start
+        @publisher = Bottle::SyncPublisher.new(sync_channel, sync_channel.exchange("bottle"), @reply_queue_name)
         block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
       end
       true
@@ -56,6 +60,12 @@ module Bottle
 
     def async?
       @publisher.is_a?(Bottle::AsyncPublisher)
+    end
+
+    def waiting_for_replies?
+      @publisher.waiting_for_replies?
+    rescue
+      false
     end
 
   end

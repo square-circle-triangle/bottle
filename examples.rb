@@ -34,6 +34,21 @@ c.with_threaded_connection do
   handle_item.call()
 end
 
+require './lib/bottle'
+c = Bottle::Client.new("sct-home", 'blocks.campaigner')
+a = (0..100).to_a
+c.each_with_amqp(a) do |aa|
+  puts aa.inspect
+c.send_message("info", {}) do |data|
+   if data[:state] == 'success'
+     puts "HAPPYNESS...#{data.inspect}"
+   else
+     puts "FAILED..#{data[:message]}"
+   end
+ end
+end
+
+
 
 # EventMachine.next_tick do
 #    puts "next tick..."

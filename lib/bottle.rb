@@ -1,4 +1,4 @@
-%w(version amqp client foreman listener publisher async_publisher server).each { |f| require File.join(File.dirname(__FILE__), 'bottle', f) }
+%w(version amqp client foreman listener publisher sync_publisher async_publisher server).each { |f| require File.join(File.dirname(__FILE__), 'bottle', f) }
 
 require File.join(File.dirname(__FILE__), 'bottle', 'workers', 'info') 
 
@@ -14,12 +14,15 @@ module Bottle
   }
   DEFAULT_QUEUE_NAME = "bottle.default"
   DEFAULT_REPLY_QUEUE_FORMAT = "bottle.%s.reply.%s"
+
+  class MissingReplyClosureError < StandardError
+  end
 end
 
 
 class Object
-  def log
-    @@__log__ ||= __create_logger__($stdout)
+  def log(target=$stdout)
+    @@__log__ ||= __create_logger__(target)
   end
 
   private

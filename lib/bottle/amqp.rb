@@ -36,12 +36,12 @@ module Bottle
       sleep(0.5) 
 
       await_completion = Proc.new do
-        if @reply_queue_count < 1
+        if waiting_for_replies?
+          EM.next_tick(await_completion) 
+        else
           log.debug "DONE.. we can kill the reactor thread now..."
           close_connection
           @reactor_thread.kill
-        else
-          EM.next_tick(await_completion) 
         end
       end
 
