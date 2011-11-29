@@ -9,16 +9,16 @@ module Bottle
 
     def publish(message, options = {}, &block)
       @exchange.publish(message, options.merge(default_options))
-      monitor_reply_queue(@reply_queue_name,&block) if block_given?
+      monitor_reply_queue(&block) if block_given?
     end
 
 
     ### IMPLEMENTATION
 
-    def monitor_reply_queue(reply_queue_name)
+    def monitor_reply_queue
       log.debug "Reply expected.. monitoring..."
 
-      reply_queue.subscribe(:max_message => 1, :timeout => 3) do |msg|
+      reply_queue.subscribe(:max_message => 1, :timeout => 5) do |msg|
         yield(extract_payload(msg[:payload]))
       end
     end
@@ -27,8 +27,9 @@ module Bottle
 
     def reply_queue
       rx = @channel.exchange("bottle.sync.reply")
-      @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
-      @reply_queue.bind(rx, :key => reply_queue_name)
+      @reply_queue = @channel.queue(@reply_queue_name, :exclusive => true, :auto_delete => true)
+      @reply_queue.bind(rx, :key => @reply_queue_name)
+      @reply_queue
     end
 
   end
