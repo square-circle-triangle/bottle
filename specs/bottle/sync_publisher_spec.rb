@@ -26,7 +26,7 @@ describe Bottle::SyncPublisher do
 
     context "when a block given" do
       it "should start monitoring the reply queue" do
-        @pub.should_receive(:monitor_reply_queue).with(@reply_queue_name)
+        @pub.should_receive(:monitor_reply_queue)
         @pub.publish(@msg){}
       end
     end
@@ -41,14 +41,14 @@ describe Bottle::SyncPublisher do
 
     it "should subscribe to a new queue called @reply_queue_name" do
       @rq.should_receive(:subscribe)
-      @pub.monitor_reply_queue("queue.reply") 
+      @pub.monitor_reply_queue
     end
 
     it "should yield received message data to the given block" do
       msg = { :msg => "hi there" }
       payload = {:payload => msg.to_yaml } 
       @rq.should_receive(:subscribe).and_yield(payload)
-      @pub.monitor_reply_queue('q.reply'){ |response|
+      @pub.monitor_reply_queue { |response|
         response.should == msg 
       }
     end
