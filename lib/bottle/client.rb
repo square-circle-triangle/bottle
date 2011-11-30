@@ -19,7 +19,7 @@ module Bottle
           return false
         end
       else
-        sync_channel = Bunny.new#(:logging => true)
+        sync_channel = Bunny.new(@amqp_settings)
         sync_channel.start
         @publisher = Bottle::SyncPublisher.new(sync_channel, sync_channel.exchange("bottle"), @reply_queue_name)
         block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
