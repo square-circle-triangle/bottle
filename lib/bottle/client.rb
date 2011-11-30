@@ -44,7 +44,6 @@ module Bottle
       args = [payload.to_yaml, opts]
       if async?
         opts[:routing_key] = @queue_name
-        args.push self
       else
         opts[:key] = @queue_name
       end
