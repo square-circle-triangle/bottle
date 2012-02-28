@@ -7,7 +7,7 @@ module Bottle
     end
 
     def publish(message, options, &block)
-      log.debug "Publishing over an Asynchronous publisher..."
+      puts "Publishing over an Asynchronous publisher..."
       default_opts = default_options.merge({ :mandatory => true })
       monitor_reply_queue(@reply_queue_name,default_opts[:message_id], &block) if block_given?
       @exchange.publish(message, options.merge(default_opts))
@@ -19,10 +19,10 @@ module Bottle
     def monitor_reply_queue(reply_queue_name, msg_id, &block)
       @reply_blocks[msg_id] = block
 
-      log.debug "QUEUE COUNT: #{@reply_blocks.size}"
+      puts "QUEUE COUNT: #{@reply_blocks.size}"
       return if !!@reply_queue
 
-      log.debug "Reply expected... setting up the reply queue: #{reply_queue_name}"
+      puts "Reply expected... setting up the reply queue: #{reply_queue_name}"
       @reply_queue = @channel.queue(reply_queue_name, :exclusive => true, :auto_delete => true)
       @reply_queue.subscribe do |metadata, payload|
         if reply_block = get_reply_block(metadata.correlation_id)

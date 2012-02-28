@@ -27,7 +27,7 @@ module Bottle
     end
     
     def handle_channel_exception(channel, channel_close)
-      log.warn "Oops... a channel-level exception: code = #{channel_close.reply_code}, message = #{channel_close.reply_text}"
+      puts "Oops... a channel-level exception: code = #{channel_close.reply_code}, message = #{channel_close.reply_text}"
     end 
   end
 end

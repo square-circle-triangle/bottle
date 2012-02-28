@@ -13,7 +13,7 @@ module Bottle
     end
 
     def start
-      log.debug "binding to #{@queue_name}, on exchange #{@exchange.name}"
+      puts "binding to #{@queue_name}, on exchange #{@exchange.name}"
       @queue.bind(@exchange, :routing_key => @queue_name).subscribe(:ack => true, &method(:handle_message))
     end 
 
@@ -24,12 +24,12 @@ module Bottle
         false
       else
         payload = YAML.load(payload)
-        #log.debug "GOT PAYLOAD: #{payload.inspect}"
+        #puts "GOT PAYLOAD: #{payload.inspect}"
         respond worker_class.process(payload), metadata
         true
       end
     rescue => e
-      log.debug "Error processing message! #{e.message}"
+      puts "Error processing message! #{e.message}"
       respond({:state => 'error', :message => e.message }, metadata)
       false
     ensure
@@ -38,7 +38,7 @@ module Bottle
     
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
-      log.debug "Responding with #{payload.inspect} to: #{metadata.reply_to} : #{metadata.message_id}"
+      puts "Responding with #{payload.inspect} to: #{metadata.reply_to} : #{metadata.message_id}"
       @channel.default_exchange.publish(payload.to_yaml,
                        :routing_key    => metadata.reply_to,
                        :correlation_id => metadata.message_id,

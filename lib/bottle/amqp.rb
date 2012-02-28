@@ -4,12 +4,12 @@ module Bottle
 
     def connect
       @connection = ::AMQP.connect(@amqp_settings)
-      log.info "Connected to AMQP broker at #{@amqp_settings[:host]}"
+      puts "Connected to AMQP broker at #{@amqp_settings[:host]}"
       @channel = ::AMQP::Channel.new(@connection)
     end
 
     def connected?
-      log.debug "connected? " + @connection.inspect
+      puts "connected? " + @connection.inspect
       @connection && @connection.is_a?(::AMQP::Session)
     end
 
@@ -30,7 +30,7 @@ module Bottle
       Thread.abort_on_exception = true
       args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:on_tcp_connection_failure) })
       @reactor_thread = Thread.new { 
-        log.debug "Connecting to AMQP broker at #{@amqp_settings[:host]}"
+        puts "Connecting to AMQP broker at #{@amqp_settings[:host]}"
         ::EM.run { ::AMQP.start(args) } 
       }
       sleep(0.5) 
@@ -39,7 +39,7 @@ module Bottle
         if waiting_for_replies?
           EM.next_tick(await_completion) 
         else
-          log.debug "DONE.. we can kill the reactor thread now..."
+          puts "DONE.. we can kill the reactor thread now..."
           close_connection
           @reactor_thread.kill
         end
@@ -50,7 +50,7 @@ module Bottle
           block.call(_iter)
           EM.next_tick(handle_item) 
         else
-          log.debug "Finished processing the list.  Start checking that reply queues are finished"
+          puts "Finished processing the list.  Start checking that reply queues are finished"
           EM.next_tick(await_completion)
         end
       end
@@ -66,19 +66,19 @@ module Bottle
 
     def close_connection
       return unless connected?
-      log.info "CLOSING connection..."
+      puts "CLOSING connection..."
       @connection.close { EventMachine.stop if EM.reactor_running? } 
     end
 
     private ########################
 
     def trap_signal
-      log.info "Signal trap caught.  Stopping now..."
+      puts "Signal trap caught.  Stopping now..."
       close_connection
     end
 
     def on_tcp_connection_failure()
-      log.debug "TCP CONNECTION FAILED!!!!!!!"
+      puts "TCP CONNECTION FAILED!!!!!!!"
     end
 
   end

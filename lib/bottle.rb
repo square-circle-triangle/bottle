@@ -3,7 +3,6 @@
 require File.join(File.dirname(__FILE__), 'bottle', 'workers', 'info') 
 
 require 'yaml'
-require 'logger'
 require 'amqp'
 require 'bunny'
 
@@ -20,15 +19,3 @@ module Bottle
 end
 
 
-class Object
-  def log(target=$stdout)
-    @@__log__ ||= __create_logger__(target)
-  end
-
-  private
-
-    def __create_logger__(target)
-      @@__log__ = Logger.new(target, Logger::INFO)
-    end
-
-end

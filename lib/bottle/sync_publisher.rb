@@ -16,7 +16,7 @@ module Bottle
     ### IMPLEMENTATION
 
     def monitor_reply_queue
-      log.debug "Reply expected.. monitoring..."
+      puts "Reply expected.. monitoring..."
 
       reply_queue.subscribe(:max_message => 1, :timeout => 5) do |msg|
         yield(extract_payload(msg[:payload]))
