@@ -8,17 +8,20 @@ module Bottle
     end
 
     def publish(message, options = {}, &block)
-      @exchange.publish(message, options.merge(default_options))
-      monitor_reply_queue(&block) if block_given?
+      @exchange.publish(message, default_options.merge(options))
+      monitor_reply_queue(options, &block) if block_given?
     end
-
 
     ### IMPLEMENTATION
 
-    def monitor_reply_queue
-      puts "Reply expected.. monitoring..."
+    def default_options
+      super.merge(:timeout => 5)
+    end
 
-      reply_queue.subscribe(:max_message => 1, :timeout => 5) do |msg|
+    def monitor_reply_queue(options = {:max_message => 1})
+      puts "Reply expected.. monitoring..."
+      options = options.keep_if{|key, value| [:max_message, :timeout].include?(key)}
+      reply_queue.subscribe(options) do |msg|
         yield(extract_payload(msg[:payload]))
       end
     end
