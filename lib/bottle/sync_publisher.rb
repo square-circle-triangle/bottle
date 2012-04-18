@@ -14,16 +14,15 @@ module Bottle
 
     ### IMPLEMENTATION
 
-    def default_options
-      super.merge(:timeout => 5)
-    end
-
-    def monitor_reply_queue(options = {:max_message => 1})
-      puts "Reply expected.. monitoring..."
+    def monitor_reply_queue(options ={})
+      options = { max_message: 1, timeout: 30 }.merge(options)
       options = options.keep_if{|key, value| [:max_message, :timeout].include?(key)}
+      
+      puts "Reply expected.. monitoring...#{options.inspect}"
       reply_queue.subscribe(options) do |msg|
         yield(extract_payload(msg[:payload]))
       end
+      puts "Finished waiting for reply queue"
     end
 
     private ###########################

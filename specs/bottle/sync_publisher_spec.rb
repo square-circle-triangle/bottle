@@ -23,23 +23,6 @@ describe Bottle::SyncPublisher do
       @pub.publish(@msg, {})
     end
 
-    describe "timeouts" do
-      it "should default to 5 second timeout" do
-        @pub.stub!(:generate_message_id).and_return("abc123")
-        @options = @pub.default_options.merge(:timeout => 5)
-        @pub.exchange.should_receive(:publish).with(@msg, @options)
-        @pub.publish(@msg, {})
-      end
-
-      it "should use passed timeout" do
-        @pub.stub!(:generate_message_id).and_return("abc123")
-        @options = @pub.default_options.merge(:timeout => 30)
-        @pub.exchange.should_receive(:publish).with(@msg, @options)
-        @pub.publish(@msg, {:timeout => 30})
-      end
-    end
-
-
     context "when a block given" do
       it "should start monitoring the reply queue" do
         @pub.should_receive(:monitor_reply_queue)
@@ -58,6 +41,20 @@ describe Bottle::SyncPublisher do
     it "should subscribe to a new queue called @reply_queue_name" do
       @rq.should_receive(:subscribe)
       @pub.monitor_reply_queue
+    end
+
+    it "should default to a 30 second timeout" do
+      msg = {:msg => "hi there"}
+      payload = {:payload => msg.to_yaml}
+      @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 30})
+      @pub.monitor_reply_queue 
+    end
+
+    it "should set the subscribe timeout to the passed value" do
+      msg = {:msg => "hi there"}
+      payload = {:payload => msg.to_yaml}
+      @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 15 })
+      @pub.monitor_reply_queue(timeout: 15) 
     end
 
     it "should yield received message data to the given block" do
