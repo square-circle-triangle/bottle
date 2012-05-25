@@ -2,10 +2,11 @@ module Bottle
 
   class Listener
     attr_accessor :channel, :queue, :exchange, :queue_name
-    
-    def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, consumer = nil)#Dispatcher.new)
+
+    def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, consumer = nil)
       @queue_name = queue_name
       @channel    = channel
+      @channel.auto_recovery = true
       @channel.on_error(&method(:handle_channel_exception))
       #@consumer   = consumer
       @queue = @channel.queue(@queue_name)
@@ -24,7 +25,6 @@ module Bottle
         false
       else
         payload = YAML.load(payload)
-        #puts "GOT PAYLOAD: #{payload.inspect}"
         respond worker_class.process(payload), metadata
         true
       end
@@ -35,15 +35,14 @@ module Bottle
     ensure
       metadata.ack
     end
-    
+
     def respond(payload, metadata)
       return if metadata.reply_to.nil?
       puts "Responding with #{payload.inspect} to: #{metadata.reply_to} : #{metadata.message_id}"
       @channel.default_exchange.publish(payload.to_yaml,
-                       :routing_key    => metadata.reply_to,
-                       :correlation_id => metadata.message_id,
-                       # :immediate      => true,
-                       :mandatory      => true)
+                                        :routing_key    => metadata.reply_to,
+                                        :correlation_id => metadata.message_id,
+                                        :mandatory      => true)
     end
 
 
@@ -52,5 +51,4 @@ module Bottle
     end
 
   end
-  
 end

@@ -3,8 +3,17 @@ module Bottle
     attr_accessor :connection, :channel, :reactor_thread
 
     def connect
+      @amqp_settings.merge!({ :on_tcp_connection_failure => method(:handle_tcp_connection_failure) })
       @connection = ::AMQP.connect(@amqp_settings)
       puts "Connected to AMQP broker at #{@amqp_settings[:host]}"
+
+      @connection.on_tcp_connection_loss(&method(:handle_connection_loss))
+      @connection.on_connection_interruption(&method(:handle_connection_loss))
+
+      @connection.on_recovery do |conn|
+        puts "Re-established connection.  Resuming normal operations..."
+      end
+
       @channel = ::AMQP::Channel.new(@connection)
     end
 
@@ -60,7 +69,7 @@ module Bottle
         @channel = ::AMQP.channel
         handle_item.call()
       end
-      
+
       @reactor_thread.join
     end
 
@@ -77,8 +86,21 @@ module Bottle
       close_connection
     end
 
-    def on_tcp_connection_failure()
-      puts "TCP CONNECTION FAILED!!!!!!!"
+    def handle_tcp_connection_failure(conn)
+      @retries ||= 0
+
+      if @retries < 3
+        @retries += 1
+        puts "[network error] TCP connection failed. retry attempt #{@retries} of 3..."
+        @connection.reconnect(false, 10)
+      else
+        raise "Connection Failure"
+      end
+    end
+
+    def handle_connection_loss(conn, settings={})
+      puts "[network failure] Trying to reconnect..."
+      conn.reconnect(false, 2)
     end
 
   end
