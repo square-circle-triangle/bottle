@@ -1,5 +1,7 @@
 module Bottle
   module AMQP
+    include RetryOnException
+
     attr_accessor :connection, :channel, :reactor_thread
 
     def connect
@@ -87,20 +89,17 @@ module Bottle
     end
 
     def handle_tcp_connection_failure(conn)
-      @retries ||= 0
-
-      if @retries < 3
-        @retries += 1
-        puts "[network error] TCP connection failed. retry attempt #{@retries} of 3..."
+      retry_on_exception(3, 35, RuntimeError.new("THIS IS A RUNTIME ERROR~")) do
+        puts "[network error] TCP connection failed." 
         @connection.reconnect(false, 10)
-      else
-        raise "Connection Failure"
       end
     end
 
     def handle_connection_loss(conn, settings={})
-      puts "[network failure] Trying to reconnect..."
-      conn.reconnect(false, 2)
+      retry_on_exception(20, 50, RuntimeError.new("TCP Network Connection Loss Occurred")) do
+        puts "[network failure] Trying to reconnect..."
+        conn.reconnect(false, 2)
+      end
     end
 
   end
