@@ -38,33 +38,59 @@ describe Bottle::SyncPublisher do
       @pub.stub!(:reply_queue).and_return(@rq)
     end
 
-    it "should subscribe to a new queue called @reply_queue_name" do
-      @rq.should_receive(:subscribe)
-      @pub.monitor_reply_queue
+    describe "expectations" do
+
+      before do
+        @pub.stub!(:reply_received?).and_return true
+      end
+
+      it "should subscribe to a new queue called @reply_queue_name" do
+        @rq.should_receive(:subscribe)
+        @pub.monitor_reply_queue
+      end
+
+      it "should default to a 30 second timeout" do
+        msg = {:msg => "hi there"}
+        payload = {:payload => msg.to_yaml}
+        @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 30})
+        @pub.monitor_reply_queue 
+      end
+
+      it "should set the subscribe timeout to the passed value" do
+        msg = {:msg => "hi there"}
+        payload = {:payload => msg.to_yaml}
+        @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 15 })
+        @pub.monitor_reply_queue(timeout: 15) 
+      end
+
     end
 
-    it "should default to a 30 second timeout" do
-      msg = {:msg => "hi there"}
-      payload = {:payload => msg.to_yaml}
-      @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 30})
-      @pub.monitor_reply_queue 
+    describe "handling reponse" do
+
+      before do
+        @msg = {:msg => "hi there"}
+        payload = {:payload => @msg.to_yaml}
+        @rq.should_receive(:subscribe).and_yield(payload)
+      end
+
+      it "should yield received message data to the given block" do
+        @pub.monitor_reply_queue { |response|
+          response.should == @msg
+        }
+      end
+
+      it "should return true on successfuly receiving data/yielding" do
+        @pub.monitor_reply_queue(){}.should be_nil 
+      end
     end
 
-    it "should set the subscribe timeout to the passed value" do
-      msg = {:msg => "hi there"}
-      payload = {:payload => msg.to_yaml}
-      @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 15 })
-      @pub.monitor_reply_queue(timeout: 15) 
+    describe "failure to yield block" do
+
+      it "should raise a NoReplyReceievedError" do
+        @rq.should_receive(:subscribe)
+        lambda{@pub.monitor_reply_queue}.should raise_error(Bottle::NoReplyReceievedError)
+      end
     end
 
-    it "should yield received message data to the given block" do
-      msg = {:msg => "hi there"}
-      payload = {:payload => msg.to_yaml}
-      @rq.should_receive(:subscribe).and_yield(payload)
-      @pub.monitor_reply_queue { |response|
-        response.should == msg
-      }
-    end
   end
-
 end

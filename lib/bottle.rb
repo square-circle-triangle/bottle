@@ -16,6 +16,8 @@ module Bottle
 
   class MissingReplyClosureError < StandardError
   end
+
+  class NoReplyReceievedError < StandardError; end
 end
 
 
