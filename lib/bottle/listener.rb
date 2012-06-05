@@ -5,7 +5,7 @@ module Bottle
 
     def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, consumer = nil)
       @queue_name = queue_name
-      @channel    = channel
+      @channel = channel
       @channel.auto_recovery = true
       @channel.on_error(&method(:handle_channel_exception))
       #@consumer   = consumer
@@ -16,21 +16,33 @@ module Bottle
     def start
       puts "binding to #{@queue_name}, on exchange #{@exchange.name}"
       @queue.bind(@exchange, :routing_key => @queue_name).subscribe(:ack => true, &method(:handle_message))
-    end 
+    end
 
-    def handle_message(metadata,payload)
+    def handle_message(metadata, payload)
       worker_class = Bottle::Foreman.registered_workers[metadata.type]
       if worker_class.nil?
-        respond({:state => 'error', :message => "Failed to find suitable worker for #{metadata.type}" }, metadata)
+        respond({:state => 'error', :message => "Failed to find suitable worker for #{metadata.type}"}, metadata)
         false
       else
-        payload = YAML.load(payload)
-        respond worker_class.process(payload), metadata
-        true
+        begin
+          #puts "GOT PAYLOAD: #{payload.inspect}"
+          payload = YAML.load(payload)
+
+          respond worker_class.process(payload), metadata
+          true
+        rescue Psych::SyntaxError
+          Airbrake.notify e
+          puts e.inspect
+          false
+        rescue => e
+          Airbrake.notify e
+          puts e.inspect
+          false
+        end
       end
     rescue => e
       puts "Error processing message! #{e.message}"
-      respond({:state => 'error', :message => e.message }, metadata)
+      respond({:state => 'error', :message => e.message}, metadata)
       false
     ensure
       metadata.ack
@@ -40,9 +52,9 @@ module Bottle
       return if metadata.reply_to.nil?
       puts "Responding with #{payload.inspect} to: #{metadata.reply_to} : #{metadata.message_id}"
       @channel.default_exchange.publish(payload.to_yaml,
-                                        :routing_key    => metadata.reply_to,
+                                        :routing_key => metadata.reply_to,
                                         :correlation_id => metadata.message_id,
-                                        :mandatory      => true)
+                                        :mandatory => true)
     end
 
 
