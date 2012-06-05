@@ -1,10 +1,9 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "bottle/version"
 
 Gem::Specification.new do |s|
   s.name        = "bottle"
-  s.version     = Bottle::VERSION
+  s.version     = '0.0.9'
   s.authors     = ["Nick Marfleet"]
   s.email       = ["nick@sct.com.au"]
   s.homepage    = ""
