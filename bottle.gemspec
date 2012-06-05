@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "bottle"
-  s.version     = '0.0.9'
+  s.version     = '0.0.10'
   s.authors     = ["Nick Marfleet"]
   s.email       = ["nick@sct.com.au"]
   s.homepage    = ""
@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency "amqp"
   s.add_runtime_dependency "bunny"
-    
+
   s.add_development_dependency "rspec"
 end
