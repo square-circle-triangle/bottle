@@ -34,10 +34,6 @@ module Bottle
           Airbrake.notify e
           puts e.inspect
           false
-        rescue => e
-          Airbrake.notify e
-          puts e.inspect
-          false
         end
       end
     rescue => e
