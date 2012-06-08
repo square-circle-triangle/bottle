@@ -39,7 +39,7 @@ module Bottle
 
     def threaded_connect(_iterator, &block)
       Thread.abort_on_exception = true
-      args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:on_tcp_connection_failure) })
+      args = @amqp_settings.merge({ :on_tcp_connection_failure => method(:handle_tcp_connection_failure) })
       @reactor_thread = Thread.new { 
         puts "Connecting to AMQP broker at #{@amqp_settings[:host]}"
         ::EM.run { ::AMQP.start(args) } 
