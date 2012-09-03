@@ -11,8 +11,8 @@ module Bottle
       @reply_queue_name = DEFAULT_REPLY_QUEUE_FORMAT % [client_reference, object_id]
     end
 
-    def send_message(msg_type, payload, &block)
-      if EM.reactor_running?
+    def send_message(msg_type, payload, msg_mode=nil, &block)
+      if (msg_mode != :sync) && EM.reactor_running?
         if !@publisher.nil?
           block_given? ? dispatch(msg_type, payload, {}, &block) : dispatch(msg_type, payload, {})
         else
@@ -34,7 +34,6 @@ module Bottle
         yield(i)
       end
     end
-
 
     private #####################################
 
