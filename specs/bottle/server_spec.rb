@@ -41,6 +41,20 @@ describe Bottle::Server do
         default_done
       end
     end
+
+    it "should start a listener with the passed options" do
+      @server = described_class.new(Bottle::DEFAULT_QUEUE_NAME, {}, {ack: false})
+      @channel = mock('channel')
+      ::AMQP::Channel.stub(:new).and_return(@channel)
+
+      listener = mock('listener')
+      em do
+        Bottle::Listener.should_receive(:new).with(@channel, Bottle::DEFAULT_QUEUE_NAME, {ack: false}).and_return(listener)
+        listener.should_receive(:start)
+        @server.poll
+        default_done
+      end
+    end
   end
 
 end

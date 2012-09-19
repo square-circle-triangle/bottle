@@ -44,7 +44,18 @@ describe Bottle::Listener do
       em do
         @amqptest.with_amqp do
           listener = described_class.new(@amqptest.channel, @queue_name)
-          listener.queue.should_receive(:subscribe).with(:ack => true, &Proc.new {})
+          listener.queue.should_receive(:subscribe).with(:ack => true, &Proc.new { })
+          listener.start
+        end
+        default_done
+      end
+    end
+
+    it "should set ack on the new queue corectly" do
+      em do
+        @amqptest.with_amqp do
+          listener = described_class.new(@amqptest.channel, @queue_name, { ack: false })
+          listener.queue.should_receive(:subscribe).with(:ack => false, &Proc.new { })
           listener.start
         end
         default_done
@@ -100,10 +111,36 @@ describe Bottle::Listener do
       it "should return true" do
         em do
           @amqptest.with_amqp do
-            meta =   AMQP::Header.new(@amqptest.channel, Proc.new {}, { :type => 'dummyworker', :reply_to => nil })
+            meta = AMQP::Header.new(@amqptest.channel, Proc.new { }, { :type => 'dummyworker', :reply_to => nil })
             meta.stub!(:ack)
             listener = described_class.new(@amqptest.channel, @queue_name)
-            listener.handle_message(meta,@payload).should === true
+            listener.handle_message(meta, @payload).should === true
+            default_done
+          end
+        end
+      end
+
+      it "should send ack when ack turned on" do
+        em do
+          @amqptest.with_amqp do
+            meta = AMQP::Header.new(@amqptest.channel, Proc.new { }, { :type => 'dummyworker', :reply_to => nil })
+            meta.stub!(:ack)
+            meta.should_receive(:ack)
+            listener = described_class.new(@amqptest.channel, @queue_name)
+            listener.handle_message(meta, @payload).should === true
+            default_done
+          end
+        end
+      end
+
+      it "should not send ack when ack turned off" do
+        em do
+          @amqptest.with_amqp do
+            meta = AMQP::Header.new(@amqptest.channel, Proc.new { }, { :type => 'dummyworker', :reply_to => nil })
+            meta.stub!(:ack)
+            meta.should_not_receive(:ack)
+            listener = described_class.new(@amqptest.channel, @queue_name, { ack: false })
+            listener.handle_message(meta, @payload).should === true
             default_done
           end
         end

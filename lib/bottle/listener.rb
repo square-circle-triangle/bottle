@@ -3,7 +3,10 @@ module Bottle
   class Listener
     attr_accessor :channel, :queue, :exchange, :queue_name
 
-    def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, consumer = nil)
+    def initialize(channel, queue_name = AMQ::Protocol::EMPTY_STRING, options = {})
+      @options = options
+      @options[:ack] = true unless @options.has_key?(:ack)
+
       @queue_name = queue_name
       @channel = channel
       @channel.auto_recovery = true
@@ -15,7 +18,7 @@ module Bottle
 
     def start
       puts "binding to #{@queue_name}, on exchange #{@exchange.name}"
-      @queue.bind(@exchange, :routing_key => @queue_name).subscribe(:ack => true, &method(:handle_message))
+      @queue.bind(@exchange, :routing_key => @queue_name).subscribe(:ack => @options[:ack], &method(:handle_message))
     end
 
     def handle_message(metadata, payload)
@@ -41,7 +44,7 @@ module Bottle
       respond({:state => 'error', :message => e.message}, metadata)
       false
     ensure
-      metadata.ack
+      metadata.ack if @options[:ack]
     end
 
     def respond(payload, metadata)
