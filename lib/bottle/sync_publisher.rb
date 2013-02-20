@@ -16,7 +16,7 @@ module Bottle
     ### IMPLEMENTATION
 
     def monitor_reply_queue(options ={})
-      options = { max_message: 1, timeout: 30 }.merge(options)
+      options = { max_message: 1, timeout: 300 }.merge(options)
       options = options.keep_if{|key, value| [:max_message, :timeout].include?(key)}
 
       puts "Reply expected.. monitoring...#{options.inspect}"

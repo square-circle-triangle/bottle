@@ -52,7 +52,7 @@ describe Bottle::SyncPublisher do
       it "should default to a 30 second timeout" do
         msg = {:msg => "hi there"}
         payload = {:payload => msg.to_yaml}
-        @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 30})
+        @rq.should_receive(:subscribe).with({ max_message: 1, timeout: 300})
         @pub.monitor_reply_queue 
       end
 
