@@ -5,7 +5,7 @@ require File.join(File.dirname(__FILE__), 'bottle', 'workers', 'info')
 require 'yaml'
 require 'amqp'
 require 'bunny'
-
+YAML::ENGINE.yamler= 'syck'
 
 module Bottle
   AMQP_DEFAULTS = {
