@@ -17,6 +17,7 @@ module Bottle
       end
 
       @channel = ::AMQP::Channel.new(@connection)
+      @channel.prefetch(1)
     end
 
     def connected?
@@ -69,6 +70,7 @@ module Bottle
       EventMachine.next_tick do
         ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
         @channel = ::AMQP.channel
+        @channel.prefetch(1)
         handle_item.call()
       end
 
