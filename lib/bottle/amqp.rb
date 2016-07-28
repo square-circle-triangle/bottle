@@ -69,6 +69,7 @@ module Bottle
       EventMachine.next_tick do
         ::AMQP.channel ||= ::AMQP::Channel.new(::AMQP.connection)
         @channel = ::AMQP.channel
+        @channel.prefetch(100)
         handle_item.call()
       end
 
